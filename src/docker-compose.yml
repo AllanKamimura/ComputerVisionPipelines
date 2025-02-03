@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  tflite-rtsp:
+    image: allanktoradex/depth_estimation:latest15
+    container_name: tflite-rtsp
+    privileged: true
+    network_mode: host
+    shm_size: 256mb
+    stdin_open: true  # Equivalent to -i
+    tty: true         # Equivalent to -t
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      CAPTURE_DEVICE: /dev/video2
+      USE_HW_ACCELERATED_INFERENCE: '1'
+      USE_GPU_INFERENCE: '0'
+      ACCEPT_FSL_EULA: '1'
+    volumes:
+      - /dev:/dev
+      - /tmp:/tmp
+      - /run/udev/:/run/udev/
+      - /var/run/dbus:/var/run/dbus
+      - /dev/galcore:/dev/galcore
+      - /sys:/sys
+      - /run/user:/run/user
+      - /home:/home
+    devices:
+      - /dev
+      - /dev/galcore
+    device_cgroup_rules:
+      - 'c 4:* rmw'
+      - 'c 13:* rmw'
+      - 'c 81:* rmw'
+      - 'c 199:* rmw'
+      - 'c 226:* rmw'
+    command: bash -c "apt-get -y update && apt-get install -y libovxlib && bash"
+
+  weston:
+    image: torizon/weston-vivante:${CT_TAG_WESTON_VIVANTE}
+    container_name: weston
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - CAP_SYS_TTY_CONFIG
+    environment:
+      ACCEPT_FSL_EULA: '1'
+    volumes:
+      - /dev:/dev
+      - /tmp:/tmp
+      - /run/udev/:/run/udev/
+    device_cgroup_rules:
+      - 'c 4:* rmw'
+      - 'c 13:* rmw'
+      - 'c 199:* rmw'
+      - 'c 226:* rmw'
+    command: '--developer'
